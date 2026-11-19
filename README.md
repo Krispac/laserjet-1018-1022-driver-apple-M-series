@@ -5,7 +5,7 @@ A replacement for HP's `hplaserjetzjs.bundle` (v1.6.1). HP's filters,
 need Rosetta. This driver is plain C. It builds as a universal binary
 (Apple Silicon + Intel) and links only against the system `libcups`.
 
-Version: 2026.11.19.1 · License: MIT
+Version: 2026.11.19.2 · License: MIT
 
 ## Linux
 
@@ -168,6 +168,9 @@ the print server's USB port then stays blocked.
 For ASUS routers running Asuswrt-Merlin, see
 [`contrib/asuswrt-merlin`](contrib/asuswrt-merlin/README.md). It has a
 script that uploads the firmware whenever the printer is switched on.
+On these routers use the router's LPD queue
+(`lpd://ROUTER_IP/LPRServer`) rather than port 9100: the ASUS print
+server on port 9100 can print the same job over and over.
 
 ## Printer options
 

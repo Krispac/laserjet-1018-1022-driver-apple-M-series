@@ -49,23 +49,23 @@ Two things happen:
 ## Mac setup
 
 Install the driver (see the main README). Then point the printer at the
-router's raw print server and turn the driver's own firmware upload off:
+router's LPD print server and turn the driver's own firmware upload off:
 
 ```sh
-sudo lpadmin -p HP1018 -E -v 'socket://192.168.1.1:9100/?waiteof=false' \
+sudo lpadmin -p HP1018 -E -v lpd://192.168.1.1/LPRServer \
   -P /Library/Printers/PPDs/Contents/Resources/HP-LaserJet-1018-hpzjs.ppd \
   -o zjsFirmware=Never
 ```
 
-`waiteof=false` matters: the ASUS print server never closes the
-connection, so without it every job stays at "Waiting for printer to
-finish". Keep the `/` before `?`: recent macOS versions reject
-`...:9100?waiteof=false` with `Bad device-uri`.
+Check the result with `lpstat -v HP1018`, and that
+`lpoptions -p HP1018` shows `zjsFirmware=Never`.
 
-Check the result with `lpstat -v HP1018`. Adding the printer from
-System Settings instead sets up an LPD queue
-(`lpd://192.168.1.1/LPRServer`) and the driver's default firmware
-setting; use the `lpadmin` command above.
+Do not use the router's raw port 9100
+(`socket://192.168.1.1:9100/?waiteof=false`): on the RT-AC86U the ASUS
+print server printed the same job over and over until it was stopped
+with `killall lpd`. If you try it anyway, keep the `/` before `?`:
+recent macOS versions reject `...:9100?waiteof=false` with
+`Bad device-uri`.
 
 ### If the router's own print server does not work
 
@@ -81,6 +81,10 @@ printer address.
 
 ## Troubleshooting
 
+- **The same job prints over and over.** Run `cancel -a HP1018` on the
+  Mac and `killall lpd; lpd br0 &` on the router, switch the printer
+  off and on, and make sure the queue uses `lpd://192.168.1.1/LPRServer`
+  (see *Mac setup*).
 - **The job stays at "Connected to printer", or is sent, and nothing
   prints.** The USB port is usually blocked by a firmware upload the
   printer did not accept. Check the log on the router:
@@ -94,7 +98,7 @@ printer address.
   exits with `ps | grep "cat " | grep -v grep`, run `killall cat`, and
   switch the printer off and on.
 - **The queue address changed.** Run `lpstat -v HP1018` on the Mac. If
-  it does not show `socket://192.168.1.1:9100/?waiteof=false`, run the
+  it does not show `lpd://192.168.1.1/LPRServer`, run the
   `lpadmin` command from *Mac setup* again. This can happen after
   changing routers or re-adding the printer in System Settings.
 - **`sh: can't create /dev/usb/lp0: Device or resource busy`.** Another

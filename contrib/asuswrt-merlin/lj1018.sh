@@ -7,7 +7,7 @@
 # can print over the network with zjsFirmware=Never.
 # Optionally starts p910nd (Entware) as a raw print server on port 9101.
 #
-# Version: 2026.11.19.1
+# Version: 2026.11.19.2
 # Copyright (c) 2026 Nicola Ferralis - SPDX-License-Identifier: MIT
 #
 # Usage:  /jffs/scripts/lj1018.sh [firmware-file] [settle-seconds] &
@@ -50,11 +50,9 @@ upload() {
 }
 
 present=0                      # seconds the printer has been present
-absent=0                       # consecutive checks without the printer
 
 while true; do
     if [ -c $DEV ]; then
-        absent=0
         if [ ! -f $FLAG ]; then
             # Wait until the printer has been present for SETTLE seconds:
             # right after power-on it appears on USB before it is ready.
@@ -77,10 +75,7 @@ while true; do
         fi
     else
         present=0
-        # Clear the flag only after two checks in a row without the
-        # printer, so a brief USB reset does not trigger a second upload.
-        absent=$((absent+1))
-        [ $absent -ge 2 ] && rm -f $FLAG
+        rm -f $FLAG                    # printer switched off or unplugged
     fi
     sleep $POLL
 done
