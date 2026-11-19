@@ -1,7 +1,7 @@
 # hpzjs - native CUPS driver for HP LaserJet 1018 / 1020 / 1022 (ZjStream)
 # Copyright (c) 2026 Nicola Ferralis - SPDX-License-Identifier: MIT
 
-VERSION   := 2026.11.05.1
+VERSION   := 2026.11.19.1
 MODELS    := 1018 1020 1022
 
 UNAME_S   := $(shell uname -s)

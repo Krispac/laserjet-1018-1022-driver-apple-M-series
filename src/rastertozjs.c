@@ -32,7 +32,7 @@
 #include <unistd.h>
 
 #ifndef HPZJS_VERSION
-#define HPZJS_VERSION "2026.11.05.1"
+#define HPZJS_VERSION "2026.11.19.1"
 #endif
 
 static volatile sig_atomic_t canceled = 0;

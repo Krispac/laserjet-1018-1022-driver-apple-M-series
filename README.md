@@ -5,7 +5,7 @@ A replacement for HP's `hplaserjetzjs.bundle` (v1.6.1). HP's filters,
 need Rosetta. This driver is plain C. It builds as a universal binary
 (Apple Silicon + Intel) and links only against the system `libcups`.
 
-Version: 2026.11.05.1 · License: MIT
+Version: 2026.11.19.1 · License: MIT
 
 ## Linux
 
@@ -152,10 +152,14 @@ so let the print server upload it, and set the driver's firmware upload
 to Never:
 
 ```sh
-sudo lpadmin -p HP1018 -E -v "socket://ROUTER_IP:9100?waiteof=false" \
+sudo lpadmin -p HP1018 -E -v 'socket://ROUTER_IP:9100/?waiteof=false' \
   -P /Library/Printers/PPDs/Contents/Resources/HP-LaserJet-1018-hpzjs.ppd \
   -o zjsFirmware=Never
 ```
+
+Keep the `/` between the port and `?waiteof=false`: recent macOS
+versions reject `socket://ROUTER_IP:9100?waiteof=false` with
+`Bad device-uri`.
 
 Do not use "Before every job" for a printer that is already running: a
 1018 that already has its firmware does not accept a second upload, and
