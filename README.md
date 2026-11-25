@@ -205,11 +205,13 @@ The protocol was recovered by reverse engineering HP's `rasterToHPZJS`
      (≤ 64 KiB, the last one padded to 16 bytes), END_JBIG, END_PAGE;
   5. END_DOC;
   6. PJL end.
-- **Buffering.** `rastertozjs` renders the complete ZjStream into an
-  anonymous `TMPDIR` file before the CUPS USB backend receives data. This
-  keeps raster generation separate from a long USB transfer. SIGTERM stops
-  both rendering and any already-started output copy, and the file descriptor
-  is unlinked immediately so cancellation does not leave print data behind.
+- **Buffering.** `spooling_filter` gives `rastertozjs` a live output
+  descriptor for firmware negotiation, then renders the complete ZjStream
+  into an anonymous `TMPDIR` file before the CUPS USB backend receives print
+  data. This keeps raster generation separate from a long USB transfer.
+  SIGTERM stops both rendering and any already-started output copy, and the
+  file descriptor is unlinked immediately so cancellation does not leave
+  print data behind.
 - **Compression.** Pages are compressed with JBIG1 (ITU-T T.82): one
   layer, two-line template, TPBON, 128-line stripes, BIH options 0x5c.
 - **Page geometry.** Width is padded to 64 pixels and height to 8 lines.

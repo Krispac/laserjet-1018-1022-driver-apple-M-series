@@ -19,6 +19,8 @@
 #define RENDERER_PATH "/Library/Printers/hpzjs/filter/rastertozjs"
 #endif
 
+#define LIVE_OUTPUT_ENV "HPZJS_LIVE_FD"
+
 static volatile sig_atomic_t child_pid = 0;
 static volatile sig_atomic_t canceled = 0;
 
@@ -121,7 +123,12 @@ int main(int argc, char **argv) {
     return 1;
   }
   if (pid == 0) {
+    char live_fd_text[16];
     if (sigprocmask(SIG_SETMASK, &previous, NULL) < 0) _exit(126);
+    int live_fd = fcntl(STDOUT_FILENO, F_DUPFD, 10);
+    if (live_fd < 0) _exit(126);
+    snprintf(live_fd_text, sizeof(live_fd_text), "%d", live_fd);
+    if (setenv(LIVE_OUTPUT_ENV, live_fd_text, 1) < 0) _exit(126);
     if (dup2(tmp, STDOUT_FILENO) < 0) _exit(126);
     close(tmp);
     execv(RENDERER_PATH, argv);

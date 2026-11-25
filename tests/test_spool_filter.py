@@ -12,11 +12,17 @@ source = root / "src/spooling_filter.c"
 payload_size = 4 * 1024 * 1024
 
 stub_source = r"""
+#include <fcntl.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 int main(void) {
+  const char *fd_text = getenv("HPZJS_LIVE_FD");
   unsigned char buf[8192];
+  if (!fd_text) return 2;
+  int live = atoi(fd_text);
+  if (live < 3 || write(live, "LIVE:", 5) != 5) return 3;
   for (size_t i = 0; i < sizeof(buf); i++) buf[i] = (unsigned char)i;
   size_t left = TOTAL_SIZE;
   while (left) {
@@ -94,8 +100,11 @@ with tempfile.TemporaryDirectory(prefix="hpzjs-spool-test-") as name:
     tmp = directory / "tmp"
     tmp.mkdir()
     status, output, stderr = run_normal(filtered, tmp)
-    assert status == 0, stderr.decode()
-    assert len(output) == payload_size
+    assert status == 0, (
+        f"status {status}; stderr: {stderr.decode(errors='replace')}"
+    )
+    assert output[:5] == b"LIVE:"
+    assert len(output) == payload_size + 5
     assert not list(tmp.iterdir())
 
     status, output_size = run_canceled(filtered, tmp)
