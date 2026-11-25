@@ -358,9 +358,16 @@ int main(int argc, char *argv[])
         }
 
         for (uint32_t y = 0; y < hgt && !canceled; y++) {
-            if (cupsRasterReadPixels(ras, line, h.cupsBytesPerLine) !=
-                h.cupsBytesPerLine)
+            size_t got = cupsRasterReadPixels(ras, line, h.cupsBytesPerLine);
+            if (got != h.cupsBytesPerLine) {
+                if (!canceled) {
+                    fprintf(stderr, "ERROR: Short raster read on page %d "
+                            "(%lu of %u bytes)\n", page,
+                            (unsigned long)got, h.cupsBytesPerLine);
+                    status = 1;
+                }
                 break;
+            }
             if (convert_line(&h, line, k) < 0) {
                 fprintf(stderr, "ERROR: Unsupported raster format (%u bpp, "
                         "color space %u)\n", h.cupsBitsPerPixel,
@@ -374,7 +381,7 @@ int main(int argc, char *argv[])
         free(line);
         free(k);
 
-        if (status) {
+        if (status || canceled) {
             free(bitmap);
             break;
         }
@@ -402,8 +409,13 @@ int main(int argc, char *argv[])
         zjs_start_page(&pi);
         zjs_jbig(&bie);
         zjs_chunk(ZJT_END_PAGE, 0, 0);
-        fflush(out);
+        if (fflush(out) == EOF || ferror(out)) {
+            fputs("ERROR: Unable to write ZjStream output\n", stderr);
+            status = 1;
+        }
         jbig_buf_free(&bie);
+        if (status)
+            break;
 
         fprintf(stderr, "PAGE: %d %u\n", page, pi.copies);
     }
@@ -414,7 +426,10 @@ int main(int argc, char *argv[])
             ppdEmitJCLEnd(ppd, out);
         else
             fputs("\033%-12345X@PJL EOJ\n\033%-12345X", out);
-        fflush(out);
+        if (fflush(out) == EOF || ferror(out)) {
+            fputs("ERROR: Unable to finish ZjStream output\n", stderr);
+            status = 1;
+        }
     }
 
     cupsRasterClose(ras);
